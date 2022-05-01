@@ -1,0 +1,76 @@
+echo Creating Scripts
+
+cat > /home/ansible_sre/extract.py << EOF
+import sys
+import json
+import csv
+from subprocess import check_output
+def response_to_dict(arg):
+    response = arg
+    ls = response.split('\n')
+    ls = [ i.strip() for i in ls]
+    d = dict(i.split(': ') for i in ls if len(i) > 0)
+    return d
+hostresp = check_output(["hostnamectl"])
+rpm_list = check_output(["rpm", "-qa"]).split('\n')
+cpuresp = check_output(["lscpu"])
+memresp = check_output(["cat", "/proc/meminfo"])
+optresp = check_output(["ls", "/opt"]).split('\n')
+# dockerimages = check_output(["docker", "ps", "--format", "\"{{.Image}} ({{.Names}}) \""]).split("\n")
+host = response_to_dict(hostresp)
+host_name = host['Static hostname']
+os = host['Operating System']
+machine_id = host['Machine ID']
+cpuinfo = response_to_dict(cpuresp) 
+meminfo = response_to_dict(memresp)
+cpus = cpuinfo['CPU(s)']
+memtotal = meminfo['MemTotal']
+with open('/tmp/{hostname}.ic.ing.net.csv', 'w') as f:
+    writer = csv.writer(f)
+    writer.writerow(['Host Name', 'Machine Id', 'OS', "CPU", "Memory", 'Packages', 'Optional'])
+    writer.writerow([host_name, machine_id, os, cpus, memtotal, rpm_list, optresp])
+EOF
+
+
+cat > /home/ansible_sre/crawler-copy.yml << EOF
+---
+- name: Copy files
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+    - name: Copy file with owner and permissions
+      copy:
+        src: /home/ansible_sre/extract.py
+        dest: /home/ansible_sre/extract.py
+        owner: ansible_sre
+        mode: 0644
+EOF
+
+
+
+cat > /home/ansible_sre/crawler-exec.yml << EOF
+---
+- name: Execute script
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+     - name: Execute the script
+       command: sx /bin/su - root -c 'python /home/ansible_sre/extract.py'
+- name: changing output permission
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+     - name: change permission the script
+       command: sx /bin/su - root -c 'chown -R ansible_sre /tmp/{hostname}.ic.ing.net.csv'
+- name: Verify output
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+    - name: cat file
+      shell: cat /tmp/{hostname}.ic.ing.net.csv
+      register: cat_content_file
+
+    - name: echo file
+      debug:
+        msg: "{{ cat_content_file.stdout }}"
+EOF

@@ -1,0 +1,61 @@
+package sshd.authz
+
+import input.pull_responses
+import input.sysinfo
+
+import data.hosts
+
+# By default, users are not authorized.
+default allow = false
+
+# Allow access to any user that has the "admin" role.
+allow {
+    data.roles["admin"][_] == input.sysinfo.pam_username
+}
+
+# Allow access to JUMPBOX
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].bastioncentosonly[_] == sysinfo.pam_username
+}
+
+# Allow access to CENPROD1
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].centosprod1useronly[_] == sysinfo.pam_username
+}
+
+# Allow access to CENPROD2
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].centosprod2useronly[_] == sysinfo.pam_username
+}
+
+# Allow access to jenkins centos
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].jenkinscentosuseronly[_] == sysinfo.pam_username
+}
+
+# Allow access to centos temp
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].centostempuseronly[_] == sysinfo.pam_username
+}
+
+# Allow access to centos temp
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].worker2useronly[_] == sysinfo.pam_username
+}
+
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].worker1useronly[_] == sysinfo.pam_username
+}
+
+allow {
+    hosts[pull_responses.files["/etc/host_identity.json"].host_id].masteruseronly[_] == sysinfo.pam_username
+}
+
+allow {
+    data.roles["centos"][_] == input.sysinfo.pam_username
+}
+
+# If the user is not authorized, then include an error message in the response.
+errors["Request denied by administrative policy"] {
+    not allow
+}

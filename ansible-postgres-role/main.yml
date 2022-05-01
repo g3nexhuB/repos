@@ -1,0 +1,12 @@
+---
+- name: Postgres Server Deployment
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  vars:
+    db_user: ansibledb
+    db_password: ansibleuser
+    db_name: ansible
+  tasks:
+  roles:
+    - common

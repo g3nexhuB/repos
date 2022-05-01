@@ -1,0 +1,30 @@
+
+
+- name: Interface configurations s3
+  template: src=roles/common-root/templates/ifcfg-enp0s3.j2
+    dest=/etc/sysconfig/network-scripts/ifcfg-enp0s3
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Interface configurations s8
+  template: src=roles/common-root/templates/ifcfg-enp0s8-upd.j2
+    dest=/etc/sysconfig/network-scripts/ifcfg-enp0s8
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Configure visudo
+  copy:
+    src: scripts/script.sh
+    dest: /tmp/
+    mode: 0755
+
+- name: Configure visudo
+  shell: sh /tmp/script.sh
+
+- name: install updates
+  yum: name=* state=latest
+
+
+
+- name: reboot
+  command: reboot

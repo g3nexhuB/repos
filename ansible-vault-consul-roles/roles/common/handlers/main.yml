@@ -1,0 +1,4 @@
+- name: check file uploaded
+  command: ls -lhtr '{{ destinationDirectory }}'
+  register: list_dir_out
+- debug: var=list_dir_out.stdout_lines

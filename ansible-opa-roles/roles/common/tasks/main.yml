@@ -1,0 +1,79 @@
+- name: Install dependencies
+  package:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - git
+    - jansson-devel 
+    - pam-devel
+    - curl-devel
+    - gcc
+
+- name: Create a directory
+  file:
+    path: /home/genex/contrib
+    state: directory
+    mode: '0755'
+
+- name: Clone opa repo
+  ansible.builtin.git:
+    repo: https://github.com/open-policy-agent/contrib
+    dest: /home/genex/contrib
+
+
+- name: Build the default target
+  make:
+    chdir: contrib/pam_opa/pam/
+
+- name: copy to libsecurity
+  command: cp /home/genex/contrib/pam_opa/pam/pam_opa.so /lib64/security
+
+- name: Put SELinux in permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: PAMD configuration file update
+  template: src=roles/common/templates/sshd.j2
+    dest=/etc/pam.d/sshd
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: sshd configuration file update
+  template: src=roles/common/templates/sshd_config.j2
+    dest=/etc/ssh/sshd_config
+    backup=yes
+    owner=0 group=0 mode=0644
+    validate='/usr/sbin/sshd -T -f %s'
+
+- name: DNS configuration
+  template: src=roles/common/templates/hosts.j2
+    dest=/etc/hosts
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Creating an empty host identity
+  file:
+    path: "/etc/host_identity.json"
+    state: touch
+
+- name: hosts identity configuration
+  template: src=roles/common/templates/host_identity.j2
+    dest=/etc/host_identity.json
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Restart service sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+
+- name: Stop service firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+
+- name: Disable service firewalld
+  command: systemctl disable firewalld
+
+

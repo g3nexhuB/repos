@@ -1,0 +1,8 @@
+---
+- name: Compile and zip
+  hosts: agent-gen
+  gather_facts: no
+  tasks:
+    - shell: cd /tmp/crawler && find .  -name "*.csv" > /tmp/crawler/csvfiles.txt && sed -e '1,2d'  /tmp/crawler/csvfiles.txt
+    - shell: cd /tmp/crawler && while IFS= read -r csvfile; do cp $csvfile /tmp/csvcompilation/ ; done < /tmp/crawler/csvfiles.txt
+    - shell: cd /tmp && zip csvcompilation.zip csvcompilation/*

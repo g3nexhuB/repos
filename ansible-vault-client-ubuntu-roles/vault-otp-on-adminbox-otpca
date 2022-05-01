@@ -1,0 +1,2 @@
+vault write ssh/creds/otp_key_role ip=192.168.57.14
+ssh -q 192.168.57.14 exit && echo $? && if [ $? -eq 0 ]; then echo "PASSED to OTP Server";  else echo "FAILED"; f

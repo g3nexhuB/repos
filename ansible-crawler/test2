@@ -1,0 +1,160 @@
+ansible omsuat-email -a 'ls -lhtr /tmp/ ' -i /etc/ansible/hosts
+ls -lhtr /tmp/
+
+
+
+cat > /tmp/emailpipeline.sh <<EOF
+#!/bin/sh
+echo "Crawler for oms, tunnel to alae089, crawlercsv files " | mailx -v -a /tmp/csvcompilation.zip   -s "test email from pipeline tunnel to alae089, crawlercsv files" 'genesis.ancheta@ing.com'
+EOF
+
+ls -la /tmp/emailpipeline.sh
+cat  > /tmp/compile.sh <<EOF
+#!/bin/sh
+
+cd /tmp/crawler && find . -type f -name "*.csv" -exec cp {} /tmp/csvcompilation \;
+
+cd /tmp && zip csvcompilation.zip csvcompilation/* 
+exit 0
+EOF
+
+cat > /tmp/single-extract-filter-csv.py <<EOF
+import sys
+import json
+import csv
+
+from subprocess import check_output
+
+
+def response_to_dict(arg):
+    response = arg
+    ls = response.split('\n')
+    ls = [ i.strip() for i in ls]
+    d = dict(i.split(': ') for i in ls if len(i) > 0)
+    return d
+
+hostresp = check_output(["hostnamectl"])
+rpm_list = check_output(["rpm", "-qa"]).split('\n')
+cpuresp = check_output(["lscpu"])
+memresp = check_output(["cat", "/proc/meminfo"])
+optresp = check_output(["ls", "/opt"]).split('\n')
+# dockerimages = check_output(["docker", "ps", "--format", "\"{{.Image}} ({{.Names}}) \""]).split("\n")
+host = response_to_dict(hostresp)
+host_name = host['Static hostname']
+os = host['Operating System']
+machine_id = host['Machine ID']
+
+cpuinfo = response_to_dict(cpuresp) 
+meminfo = response_to_dict(memresp)
+
+cpus = cpuinfo['CPU(s)']
+memtotal = meminfo['MemTotal']
+with open('/tmp/crawler/{}.csv'.format(host_name), 'w') as f:
+    writer = csv.writer(f)
+
+    writer.writerow(['Host Name', 'Machine Id', 'OS', "CPU", "Memory", 'Packages', 'Optional'])
+    writer.writerow([host_name, machine_id, os, cpus, memtotal, rpm_list, optresp])
+EOF
+
+cat > /tmp/agent_crawler_uat.yml << EOF
+---
+- name: Copy files
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+    - name: Copy file with owner and permissions
+      copy:
+        src: /tmp/single-extract-filter-csv.py
+        dest: /tmp/single-extract-filter-csv.py
+        owner: ansible_sre
+        mode: 0644
+- name: Execute script
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+     - name: Execute the script
+       command: sx /bin/su - root -c 'python /tmp/single-extract-filter-csv.py'
+- name: changing output permission
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+     - name: change permission the script
+       command: sx /bin/su - root -c 'chown -R ansible_sre /tmp/{hostname}.ic.ing.net.csv'
+- name: Verify output
+  hosts: omsdevuat
+  remote_user: ansible_sre
+  tasks:
+    - name: cat file
+      shell: cat /tmp/{hostname}.ic.ing.net.csv
+      register: cat_content_file
+    - name: echo file
+      debug:
+        msg: "{{ cat_content_file.stdout }}"
+
+- name: Copy csv files to alae089
+  hosts: agent-gen
+  gather_facts: no
+  tasks:
+    - shell: scp alae089.ic.ing.net:/tmp/*.csv /home/ansible_sre
+    - shell: scp alde063.ic.ing.net:/tmp/*.csv /home/ansible_sre
+    - shell: scp /home/ansible_sre/*.csv alae089.ic.ing.net:/home/ansible_sre
+
+
+- name: Copy CSV outut to Ansible Server
+  hosts: omsdevuat
+  gather_facts: no
+  tasks:
+    - name: Fetch the file from the remote host to agent
+      run_once: no
+      fetch: src=/tmp/crawler{{ item }} dest=/tmp/crawler
+      with_items: "{{ files_to_copy.stdout_lines }}"
+
+
+- name: Compile and zip
+  hosts: agent-gen
+  gather_facts: no
+  tasks:
+    - shell:  sx /bin/su - root -c "sh /tmp/compile.sh"
+    - shell:  sx /bin/su - root -c "chown -R ansible_sre /tmp/csvcompilation.zip "
+
+# send the zip file to vm2
+
+- name: Send zip file to VM2
+  hosts: omsuat-email
+  remote_user: ansible_sre
+  gather_facts: no
+  tasks:
+    - copy:
+        src: /tmp/csvcompilation.zip 
+        dest: /tmp/csvcompilation.zip 
+        owner: ansible_sre
+        mode: 0644
+
+
+# send email with attached zip file
+
+- name: Copy scripts to remote hosts
+  hosts: omsuat-email
+  remote_user: ansible_sre
+  gather_facts: no
+  tasks:
+    - copy:
+        src: /tmp/emailpipeline.sh
+        dest: /tmp/
+        owner: ansible_sre
+        mode: 0644
+
+- name: testmail
+  hosts: omsuat-email
+  remote_user: ansible_sre
+  gather_facts: no
+  tasks:
+    - command: sx /usr/bin/su - root -c "sh /tmp/emailpipeline.sh "
+EOF
+
+
+
+scp /tmp/emailpipeline.sh alae089.ic.ing.net:/tmp/emailpipeline.sh
+scp /tmp/csvcompilation.zip alae089.ic.ing.net:/tmp/csvcompilation.zip
+ansible-playbook /tmp/agent_crawler_uat.yml -i /etc/ansible/hosts
+ansible omsuat-email -a 'sx /bin/su - root -c "sh /tmp/emailpipeline.sh " ' -i /etc/ansible/hosts

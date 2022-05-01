@@ -1,0 +1,12 @@
+[Unit]
+Description=opa
+Documentation=https://www.openpolicyagent.org
+
+[Service]
+ExecStartPre=/bin/sleep 30
+ExecStart=/bin/sh -c "/opt/timedaccess"
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

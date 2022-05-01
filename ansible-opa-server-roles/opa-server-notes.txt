@@ -1,0 +1,14 @@
+https://www.openpolicyagent.org/docs/latest/ssh-and-sudo-authorization/
+
+https://github.com/open-policy-agent/contrib/tree/master/pam_opa
+
+
+curl -L -o opa https://openpolicyagent.org/downloads/v0.38.0/opa_linux_amd64_static
+
+
+chmod 755 ./opa
+
+yum install -y git wget
+
+git clone https://github.com/open-policy-agent/contrib
+

@@ -1,0 +1,12 @@
+[Unit]
+Description=Vault Unseal
+Documentation=https://www.vault.io/
+
+[Service]
+ExecStartPre=/bin/sleep 30
+ExecStart=/bin/sh -c "/opt/unseal"
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

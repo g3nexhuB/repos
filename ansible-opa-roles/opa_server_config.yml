@@ -1,0 +1,10 @@
+---
+- name: OPA Deployment
+  hosts: opa_server
+  remote_user: genex
+  become: true
+  tasks:
+  roles:
+    - opa_server_config
+  
+

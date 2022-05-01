@@ -1,0 +1,31 @@
+Unseal Key 1: No4e7jpf5dEQR39FRnLhbEOZgm42Q6aawfX3hJDtdmRT
+Unseal Key 2: gT3/cmRZXpMEtfG181VW0SUeB2g/Y5QVbSIj8BNCH9Ul
+Unseal Key 3: MYRkwgFJxI3rbhwBt1ZELWBe1w73YFhvHgaUO8hAlEs8
+Unseal Key 4: GQ6sVIlc5AkQWHg1XG1wrVN10K5Se12TdOA0SK0rWbAy
+Unseal Key 5: ohlJt6kZLz4mL+NhmJnA6a5M5SGalUYsuNTzQ7UF9FYd
+
+Initial Root Token: s.PmdZQ2xwhAtNmYUfUPC2HHGv
+
+Vault initialized with 5 key shares and a key threshold of 3. Please securely
+distribute the key shares printed above. When the Vault is re-sealed,
+restarted, or stopped, you must supply at least 3 of these keys to unseal it
+before it can start servicing requests.
+
+Vault does not store the generated master key. Without at least 3 key to
+reconstruct the master key, Vault will remain permanently sealed!
+
+It is possible to generate new unseal keys, provided you have a quorum of
+existing unseal keys shares. See "vault operator rekey" for more information.
+[root@opa-vault-pam-vm-0 azureuser]# vault status
+Key                Value
+---                -----
+Seal Type          shamir
+Initialized        true
+Sealed             true
+Total Shares       5
+Threshold          3
+Unseal Progress    0/3
+Unseal Nonce       n/a
+Version            1.2.2
+HA Enabled         true
+[root@opa-vault-pam-vm-0 azureuser]#

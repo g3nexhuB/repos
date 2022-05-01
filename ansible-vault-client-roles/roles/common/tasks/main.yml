@@ -1,0 +1,57 @@
+- name: Jq install repo
+  command: yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+- name: Install dependencies
+  package:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - git
+    - wget
+    - zip
+    - unzip
+    - jq
+
+- name: Download Vault Binary
+  get_url:
+    url: https://releases.hashicorp.com/vault/1.2.2/vault_1.2.2_linux_amd64.zip
+    dest: /home/genex/vault_1.2.2_linux_amd64.zip
+    mode: '0755'
+    checksum: md5:fb4ae18648977283fcfa7686e18795ff
+
+
+- name: Extract vault zip into usr bin
+  ansible.builtin.unarchive:
+    src: /home/genex/vault_1.2.2_linux_amd64.zip
+    dest: /usr/bin/
+    remote_src: yes
+
+
+- name: Stop service firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+
+- name: Disable service firewalld
+  command: systemctl disable firewalld
+
+- name: Create a directory
+  file:
+    path: /home/genex/painless-password-rotation
+    state: directory
+    mode: '0755'
+
+- name: Clone painless password rotation repo
+  ansible.builtin.git:
+    repo: https://github.com/scarolan/painless-password-rotation.git
+    dest: /home/genex/painless-password-rotation
+
+- name: Update environment  configuration
+  template: src=roles/common/templates/environment_client.j2
+    dest=/etc/environment
+    backup=yes
+    owner=0 group=0 mode=0644
+
+#reboot
+- name: reboot host
+  command: reboot

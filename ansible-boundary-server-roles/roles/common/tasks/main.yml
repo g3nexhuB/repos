@@ -1,0 +1,81 @@
+- name: upgrade packages via yum
+  yum:
+    name="*"
+    state=latest
+
+- name: Install dependencies
+  package:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - wget
+    - unzip
+    - yum-utils
+
+- name: Download file
+  get_url:
+    url: https://releases.hashicorp.com/boundary/0.1.1/boundary_0.1.1_linux_amd64.zip
+    dest: /tmp/boundary_0.1.1_linux_amd64.zip
+    mode: '755'
+
+
+- name: Extract boundary_0.1.1_linux_amd64.zip into usr bin
+  ansible.builtin.unarchive:
+    src: /tmp/boundary_0.1.1_linux_amd64.zip
+    dest: /usr/bin/
+    remote_src: yes
+
+- name: Extract into usr bin
+  command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+- name: Install docker
+  package:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+
+- name: enable service docker
+  command: systemctl enable docker
+
+- name: Start service docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+
+- name: pull images
+  shell: docker pull postgres:11 && docker pull postgres:12
+
+- name: Stop service firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+
+- name: Disable service firewalld
+  command: systemctl disable firewalld
+
+- name: Creating an empty service file
+  file:
+    path: "/etc/systemd/system/boundary.service"
+    state: touch
+
+- name: Boundary systemd configuration
+  template: src=roles/common/templates/boundary.j2
+    dest=/etc/systemd/system/boundary.service
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: start boundary server
+  ansible.builtin.service:
+    name: boundary
+    state: started
+- name: enable boundary
+  command: systemctl enable boundary.service
+
+- name: Unconditionally reboot the machine with all defaults
+  command: reboot
+
+
+

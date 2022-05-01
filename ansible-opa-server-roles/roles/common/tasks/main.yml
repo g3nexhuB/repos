@@ -1,0 +1,99 @@
+- name: upgrade packages via yum
+  yum:
+    name="*"
+    state=latest
+
+- name: Install dependencies
+  package:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - git
+    - wget
+
+- name: Download file
+  shell: cd /tmp/ && curl -L -o opa https://openpolicyagent.org/downloads/v0.38.0/opa_linux_amd64_static 
+
+- name: Change file permissions
+  ansible.builtin.file:
+    path: /tmp/opa
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Move to PATH
+  command: cp /tmp/opa /usr/bin
+
+- name: Create a directory
+  file:
+    path: /home/genex/contrib
+    state: directory
+    mode: '0755'
+
+- name: Clone opa repo
+  ansible.builtin.git:
+    repo: https://github.com/open-policy-agent/contrib
+    dest: /home/genex/contrib
+
+
+- name: Put SELinux in permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: Update OPA sshd authz
+  template: src=roles/common/templates/sshd.authz.j2
+    dest=/home/genex/sshd_authz.rego
+    backup=yes
+    owner=0 group=0 mode=0755
+
+- name: Update OPA timed access
+  template: src=roles/common/templates/timedaccess.j2
+    dest=/opt/timedaccess
+    backup=yes
+    owner=0 group=0 mode=0755
+
+- name: Creating an empty service file
+  file:
+    path: "/etc/systemd/system/opa.service"
+    state: touch
+
+- name: OPA systemd configuration
+  template: src=roles/common/templates/opa.j2
+    dest=/etc/systemd/system/opa.service
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: start opa server
+  ansible.builtin.service:
+    name: opa
+    state: started
+
+- name: enable opa
+  command: systemctl enable opa.service
+
+- name: Creating an empty service file
+  file:
+    path: "/etc/systemd/system/opa_post.service"
+    state: touch
+
+- name: OPA post systemd configuration
+  template: src=roles/common/templates/opa_post.j2
+    dest=/etc/systemd/system/opa_post.service
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: start opa post server
+  ansible.builtin.service:
+    name: opa_post
+    state: started
+
+- name: enable opa post
+  command: systemctl enable opa_post.service
+
+
+- name: Unconditionally reboot the machine with all defaults
+  command: reboot
+
+
+

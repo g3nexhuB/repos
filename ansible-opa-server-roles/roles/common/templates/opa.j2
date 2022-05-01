@@ -1,0 +1,12 @@
+[Unit]
+Description=opa
+Documentation=https://www.openpolicyagent.org
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/opa run --server --log-level=debug
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

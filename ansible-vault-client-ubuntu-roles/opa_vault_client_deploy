@@ -1,0 +1,194 @@
+setup OPA and VAULT Client 
+
+
+vi /etc/sysconfig/network-scripts/ifcfg-enp0s8
+vi /etc/selinux/config
+sydtemctl disable firewalld
+systemctl disable firewalld
+systemctl stop firewalld
+reboot
+visudo
+groups genex
+visudo
+exit
+exit
+clear
+yum install git -y
+git clone https://github.com/open-policy-agent/contrib
+yum install pam-devel -y
+yum install curl-devel -y
+cd contrib/pam_opa/pam/ && make
+yum install gcc -y
+cd contrib/pam_opa/pam/ && make
+ls
+makr
+make
+cd ..
+ls
+yum install jansson-devel -y
+cd ~
+cd contrib/pam_opa/pam/ && make
+ls
+cd /home/genex/
+ls
+cd /home/genex/
+cd contrib/pam_opa/pam/ && make
+ls
+cp pam_opa.so /lib64/security
+vi /etc/pam.d/sshd
+vi /etc/ssh/sshd_config
+vi /etc/hosts
+ping CEN-PRO-2
+vi /etc/host_identity.json
+systemctl restart sshd
+journalctl -xe"
+journalctl -xe
+systemctl status sshd
+systemctl status sshd -l
+vi /etc/ssh/sshd_config
+vi /etc/pam.d/sshd
+systemctl restart sshd
+vi /etc/pam.d/sshd
+vi /etc/ssh/sshd_config
+systemctl restart sshd
+systemctl status sshd -l
+exit
+systemctl status sshd -l
+vi /etc/motd
+exit
+vi /etc/environment
+vi /etc/environment
+exir
+exit
+exit
+vi /etc/environment
+vi /etc/profile.d/ssh-timeout.sh
+chmod 755 /etc/profile.d/ssh-timeout.sh
+exit
+chmod 755 /etc/profile.d/ssh-timeout.sh
+yum install wget -y && yum install unzip -y && wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip && unzip vault_1.4.3_linux_amd64.zip -d /usr/bin
+vault
+wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip
+unzip vault_1.4.3_linux_amd64.zip -d vault /usr/bin &&
+unzip vault_1.4.3_linux_amd64.zip -d vault /usr/bin
+vault
+wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip
+ls
+yum install wget -y && yum install unzip -y
+wget
+wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip
+ls
+wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip && unzip vault_1.4.3_linux_amd64.zip -d /usr/bin
+curl -O https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip
+ls \
+ls /tmp
+ls
+unzip vault_1.4.3_linux_amd64.zip -d vault /usr/bin
+vault
+ls
+unzip vault_1.4.3_linux_amd64.zip
+ls
+unzip vault_1.4.3_linux_amd64.zip -d vault /usr/bin
+ls
+vault
+ls
+unzip
+unzip vault_1.4.3_linux_amd64.zip
+ls
+cd /
+ls
+cdtm
+cd /tmp
+ls
+unzip vault_1.4.2_linux_amd64.zip
+ls
+reboot
+vault
+unzip vault_1.4.2_linux_amd64.zip
+ls
+ls
+wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip
+ls
+yum update
+reboot
+unzip vault_1.4.2_linux_amd64.zip
+l
+ls
+ls -la
+rm -rf vault_1.4.3_linux_amd64.zip
+ls
+cd /tmp
+ls
+ls -la
+unzip vault_1.4.2_linux_amd64.zip
+ls
+wget
+yum install wget -y && yum install unzip -y && wget https://releases.hashicorp.com/vault/1.4.3/vault_1.4.3_linux_amd64.zip && unzip vault_1.4.3_linux_amd64.zip -d /usr/bin
+unzip vault_1.4.2_linux_amd64.zip
+;ls
+ls
+ls -la /usr/bin | grep va
+ls
+vault
+cp vault /usr/bin
+vault
+ls -la
+ls -la /usr/bin/vault
+chmod 755 /usr/bin/vault
+vault
+cp vault /bin
+bin
+vault
+rm -rf vault
+ls
+vault
+rm -rf /usr/bin/vault
+ls
+unzip vault_1.4.2_linux_amd64.zip
+ls
+cd ks-script-bQqtU_
+ls
+unzip vault_1.4.2_linux_amd64.zip
+ls
+yum makecache
+wget https://releases.hashicorp.com/vault/1.6.1/vault_1.6.1_linux_amd64.zip
+df -h
+ls
+curl -0 https://releases.hashicorp.com/vault/1.6.1/vault_1.6.1_linux_amd64.zip
+df -h
+curl -L -o https://releases.hashicorp.com/vault/1.6.1/vault_1.6.1_linux_amd64.zip
+curl -L -o vault_1.6.1_linux_amd64.zip https://releases.hashicorp.com/vault/1.6.1/vault_1.6.1_linux_amd64.zip
+ls
+unzip vault_1.6.1_linux_amd64.zip
+ls
+sudo yum install unzip
+unzip -q vault_1.6.1_linux_amd64.zip
+ls
+tar -xvf vault_1.6.1_linux_amd64.zip
+tar xvf vault_1.6.1_linux_amd64.zip
+tar xvf {vault_1.6.1_linux_amd64.zip}
+ls
+cd /tmp
+ls
+ls -la
+cp vault /usr/bin
+vault
+cat /etc/environment
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum install jq -y
+jq -Version
+git clone https://github.com/scarolan/painless-password-rotation.git
+ls
+ls
+ visudo
+cp /tmp/painless-password-rotation/files/rotate_linux_password.sh /etc/
+chmod 755 /etc/rotate_linux_password.sh
+ls
+vault status
+vi /etc/rotate_linux_password.sh
+vi /etc/rotate_linux_password.sh
+vi /etc/rotate_linux_password.sh
+vault token create -period 24h -policy rotate-linux
+sh /etc/rotate_linux_password.sh root
+exit
+history

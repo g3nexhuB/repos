@@ -1,0 +1,47 @@
+# Install boundary
+genex        ALL=(ALL)       NOPASSWD: ALL
+
+wget
+unzip
+yum-utils
+docker-ce
+docker-ce-cli
+containerd.io
+
+
+
+1. yum update && yum install wget -y && wget https://releases.hashicorp.com/boundary/0.1.1/boundary_0.1.1_linux_amd64.zip
+2. cp boundary_0.1.1_linux_amd64.zip /opt
+3. yum install unzip -y && cd /opt && unzip boundary_0.1.1_linux_amd64.zip && cp boundary /usr/bin/
+4. yum install -y yum-utils && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install docker-ce docker-ce-cli containerd.io -y && systemctl start docker && systemctl enable docker && docker pull postgres:11 && docker pull postgres:12
+5. systemctl stop firewalld && systemctl disable firewalld && reboot
+6. boundary dev -api-listen-address=0.0.0.0 -cluster-listen-address=0.0.0.0 -proxy-listen-address=0.0.0.0 -worker-public-address=192.168.56.133
+# verify
+1. open browser and access http://192.168.56.133:9200
+
+- name: Add repository
+  yum_repository:
+    name: epel
+    description: EPEL YUM repo
+    baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+
+
+#create boundary service
+vi boundary.service
+[Unit]
+Description=Boundary Server
+Documentation=https://www.boundaryproject.io/
+
+[Service]
+ExecStart=/usr/bin/boundary dev -api-listen-address=0.0.0.0 -cluster-listen-address=0.0.0.0 -proxy-listen-address=0.0.0.0 -worker-public-address=192.168.56.128
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+cp boundary.service /etc/systemd/system/
+systemctl start boundary.service
+systemctl enable boundary.service
+
+/etc/systemd/system/boundary.service

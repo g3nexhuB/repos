@@ -1,0 +1,67 @@
+---
+- name: Vault Server Deployment
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+
+  roles:
+    - vault-post
+
+- name: archive unseal keys
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+    - name: archive unseal keys
+      shell: cd /etc/vault/ && zip unseal.zip unseal/*
+
+- name: Copy unseal keys
+  hosts: localhost
+  tasks:
+    - name: copy unseal keys
+      shell: scp "{{ remote_user }}@{{ ip_addr }}":/etc/vault/unseal.zip roles/vault-unseal/unseal-local/
+    - name: copy root_token
+      shell: scp "{{ remote_user }}@{{ ip_addr }}":/etc/vault/root/rootkey roles/vault-unseal/root_token/
+    - name: extract
+      shell: cd /Users/genesisancheta/repo/ansible-vault-consul-roles/roles/vault-unseal/unseal-local && unzip unseal.zip
+    - name: build vault unseal j2
+      shell: sh /Users/genesisancheta/repo/ansible-vault-consul-roles/scripts/unseal_copy.sh
+
+- name: Unseal
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+    - name: Creating an empty unseal file
+      file:
+        path: "/opt/unseal"
+        state: touch
+
+    - name: Update unseal keys
+      template: src=roles/common/templates/vault_unseal.j2
+        dest=/opt/unseal
+        backup=yes
+        owner=0 group=0 mode=755
+
+    - name: Creating an empty vault post service 
+      file:
+        path: "/etc/systemd/system/vault_unseal.service"
+        state: touch
+        
+    - name: Update unseal keys
+      template: src=roles/common/templates/vault_post.j2
+        dest=/etc/systemd/system/vault_unseal.service
+        backup=yes
+        owner=0 group=0 mode=0644
+
+    - name: Reload systemd
+      command: systemctl daemon-reload
+    
+    - name: Start vault unseal server
+      ansible.builtin.service:
+        name: vault_unseal
+        state: started
+    
+    - name: Enable vault unseal service
+      command: systemctl enable vault_unseal.service

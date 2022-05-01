@@ -1,0 +1,40 @@
+#how to setup vault on a host
+
+yum install wget -y && yum install unzip -y && wget https://releases.hashicorp.com/vault/1.2.2/vault_1.2.2_linux_amd64.zip && unzip vault_1.2.2_linux_amd64.zip -d /usr/bin
+
+
+
+add vault variables globally
+
+vi /etc/environment
+export VAULT_ADDR=http://192.168.56.105:8200
+export VAULT_TOKEN=s.o2HQL5YjAXDRs1HsvehoXXq1
+
+#install jq
+
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+sudo yum install jq -y
+
+jq -Version
+
+#download painless password rotation by vault
+git clone https://github.com/scarolan/painless-password-rotation.git
+
+
+#: Generate a token for each server
+vault token create -period 24h -policy rotate-linux
+
+chmod +x ~/painless-password-rotation/files/rotate_linux_password.sh
+/painless-password-rotation/files/rotate-linux-password.sh root
+
+
+* * * * * cd /usr/local/bin && ./rotate_linux_password.sh root
+* * * * * cd /usr/local/bin && ./rotate_linux_password.sh genex
+
+
+yum clean all
+rpm -Uvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm
+rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+rpm -Uvh http://dl.atrpms.net/all/atrpms-repo-7-7.el7.x86_64.rpm
+rpm -Uvh http://repo.webtatic.com/yum/el7/webtatic-release.rpm

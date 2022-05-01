@@ -1,0 +1,48 @@
+boundary authenticate password -auth-method-id=ampw_1234567890 -login-name=admin -password=password > boundary_token
+
+export BOUNDARY_TOKEN=$(cat boundary_token)
+boundary scopes create -name=retailshelf -description="For Retailshelf "
+export ORG_ID="o_fveEO5jvCW"
+
+
+boundary scopes create -scope-id=o_hWl0BEZd7l -name=rs_hosts     -description="Manage rs machines"
+
+boundary host-catalogs create static -scope-id=p_xwbZ0MU2MW -name=ITOPS -description="For ITOPS usage"
+
+
+boundary hosts create static -name=boks-cyberark -description="TARGET HOSTS" -address="10.200.252.69" -host-catalog-id=hcst_xxZUbuTEUw
+
+
+
+boundary hosts update static -id hst_mCZbXxmT1D -name sre -description "For DesrevOps usage"
+
+boundary host-sets create static -name="boks" -description="boks machines" -host-catalog-id=hcst_xxZUbuTEUw
+
+boundary host-sets add-hosts -id=hsst_ZIyMPBzUBz -host=hst_qQr4eA0s3g
+
+
+boundary targets create tcp -name="boks-rhel" -description="target boks" -default-port=22 -scope-id=p_xwbZ0MU2MW -session-connection-limit="-1"
+
+boundary targets add-host-sets -id=ttcp_gQfxxDdncF -host-set=hsst_ZIyMPBzUBz
+
+
+boundary auth-methods create password -scope-id=o_fveEO5jvCW -name="org_auth_method" -description="Org auth method"
+
+
+boundary accounts create password -auth-method-id=ampw_mME3js4J0p -login-name="genex" -password="password" -name=genex -description="genex password account"
+
+
+boundary users create -name="te34uk" -description="A test user" -scope-id=o_fveEO5jvCW
+
+
+boundary users set-accounts -id=u_LfCCOTJhTQ -account=<account_id>
+
+
+
+boundary authenticate password -login-name="te34uk" -password="password" -auth-method-id=ampw_mME3js4J0p
+
+boundary connect ssh -target-id ttcp_gQfxxDdncF
+
+
+
+boundary targets add-host-sets -id=ttcp_CrVgBd0yjm -host-set=hsst_rrcrFAJRxg

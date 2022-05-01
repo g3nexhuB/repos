@@ -1,0 +1,95 @@
+---
+- name: Copy scripts to remote hosts
+  hosts: opa-vault
+  remote_user: genesisancheta
+  gather_facts: no
+  tasks:
+    - copy:
+        src: /Users/genesisancheta/repo/ansible-crawler/extract.py
+        dest: /home/genesisancheta/extract.py
+        owner: genesisancheta
+        mode: 0644
+
+- name: Execute script and change permission
+  hosts: opa-vault
+  remote_user: genesisancheta
+  become: true
+  gather_facts: no
+  tasks:
+     - shell: python /home/genesisancheta/extract.py && chown -R genesisancheta /tmp/crawler/$(hostname).csv
+
+- name: Verify output
+  hosts: opa-vault
+  remote_user: genesisancheta
+  gather_facts: no
+  tasks:
+    - shell: cat /tmp/crawler/$(hostname).csv
+      register: cat_content_file
+    - debug:
+        msg: "{{ cat_content_file.stdout }}"
+
+- name: Prepare to Fetch
+  hosts: opa-vault
+  gather_facts: no
+  tasks:
+    - shell: (cd /tmp/crawler/ ; find . -maxdepth 1 -type f) | cut -d'/' -f2
+      register: files_to_copy
+
+- name: Create directory
+  hosts: agent-gen
+  gather_facts: no
+  tasks:
+    - shell: mkdir /tmp/csvcompilation && mkdir /tmp/crawler
+
+- name: Copy CSV outut to Ansible Server
+  hosts: opa-vault
+  gather_facts: no
+  tasks:
+    - name: Fetch the file from the remote host to agent
+      run_once: no
+      fetch: src=/tmp/crawler/{{ item }} dest=/tmp/crawler
+      with_items: "{{ files_to_copy.stdout_lines }}"
+
+
+
+- name: Compile and zip
+  hosts: agent-gen
+  gather_facts: no
+  tasks:
+    - shell: cd /tmp/crawler && find .  -name "*.csv" > /tmp/crawler/csvfiles.txt && sed -e '1,2d'  /tmp/crawler/csvfiles.txt
+    - shell: cd /tmp/crawler && while IFS= read -r csvfile; do cp $csvfile /tmp/csvcompilation/ ; done < /tmp/crawler/csvfiles.txt
+    - shell: cd /tmp && zip csvcompilation.zip csvcompilation/*
+
+# send the zip file to vm2 vault
+
+- name: Send zip file to VM2 Vault
+  hosts: vault
+  remote_user: genesisancheta
+  gather_facts: no
+  tasks:
+    - copy:
+        src: /tmp/csvcompilation.zip 
+        dest: /home/genesisancheta/csvcompilation.zip 
+        owner: genesisancheta
+        mode: 0644
+
+
+# send email with attached zip file
+
+- name: Copy scripts to remote hosts
+  hosts: all
+  remote_user: ansible_sre
+  gather_facts: no
+  tasks:
+    - copy:
+        src: /tmp/emailpipeline.sh
+        dest: /tmp/emailpipeline.sh
+        owner: ansible_sre
+        mode: 0644
+
+- name: Send Mail
+  hosts: all
+  remote_user: ansible_sre
+  gather_facts: no
+  tasks:
+    - command: sx /usr/bin/su - root -c "sh /tmp/emailpipeline.sh"

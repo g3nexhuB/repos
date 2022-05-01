@@ -1,0 +1,22 @@
+---
+- name: copy id and get interfaces
+  hosts: localhost
+  tasks:
+
+    # - name: open status interfaces
+    #   shell: ssh -p 2222 genex@127.0.0.1 "nmcli connection show -a"
+
+    - name: open interfaces enp0s3
+      shell: ssh -p 2222 root@{{ local_ip_addr }} "nmcli con up enp0s8"
+
+    - name: copy id
+      shell: ssh-copy-id "{{ remote_user }}@{{ ip_addr }}"
+
+    - name: get interfaces enps3
+      shell: scp "{{ remote_user }}@{{ ip_addr }}":/etc/sysconfig/network-scripts/ifcfg-enp0s3 roles/common-root/templates/ifcfg-enp0s3.j2
+
+    - name: get interfaces enps8
+      shell: scp "{{ remote_user }}@{{ ip_addr }}":/etc/sysconfig/network-scripts/ifcfg-enp0s8 roles/common-root/templates/ifcfg-enp0s8.j2
+
+    - name: change template enp0s8
+      shell: sed 's/ONBOOT=no/ONBOOT=yes/' roles/common-root/templates/ifcfg-enp0s8.j2 > roles/common-root/templates/ifcfg-enp0s8-upd.j2

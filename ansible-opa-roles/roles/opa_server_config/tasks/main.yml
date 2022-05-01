@@ -1,0 +1,15 @@
+- name: Update OPA sshd authz
+  template: src=roles/common/templates/sshd.authz.j2
+    dest=/home/genex/sshd_authz.rego
+    backup=yes
+    owner=0 group=0 mode=0755
+
+- name: Update OPA timed access
+  template: src=roles/common/templates/timedaccess.j2
+    dest=/opt/timedaccess
+    backup=yes
+    owner=0 group=0 mode=0755
+
+
+- name: Run opt timedaccess on opa master
+  command: sh /opt/timedaccess

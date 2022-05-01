@@ -1,0 +1,67 @@
+# - name: upgrade packages via yum
+#   yum:
+#     name="*"
+#     state=latest
+
+- name: Install dependencies
+  package:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - git
+    - wget
+    - zip
+    - unzip
+    - perl-Digest-SHA
+
+- name: Download Vault Binary
+  get_url:
+    url: https://releases.hashicorp.com/vault/1.2.2/vault_1.2.2_linux_amd64.zip
+    dest: /home/genex/vault_1.2.2_linux_amd64.zip
+    mode: '0755'
+    checksum: md5:fb4ae18648977283fcfa7686e18795ff
+
+- name: Download Consul Binary
+  get_url:
+    url: https://releases.hashicorp.com/consul/1.8.0/consul_1.8.0_linux_amd64.zip
+    dest: /home/genex/consul_1.8.0_linux_amd64.zip
+    mode: '0755'
+    checksum: md5:c4116eb6b70a4e06007cf4287dd7a982
+
+- name: Extract vault zip into usr bin
+  ansible.builtin.unarchive:
+    src: /home/genex/vault_1.2.2_linux_amd64.zip
+    dest: /usr/bin/
+    remote_src: yes
+
+- name: Extract consul zip into usr bin
+  ansible.builtin.unarchive:
+    src: /home/genex/consul_1.8.0_linux_amd64.zip
+    dest: /usr/bin/
+    remote_src: yes
+#consul
+- name: Configure Consul
+  include_tasks: consul.yml
+
+#vault
+- name: Configure Vault
+  include_tasks: vault.yml
+
+- name: Stop service firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+
+- name: Disable service firewalld
+  command: systemctl disable firewalld
+
+- name: Update Consul systemd configuration
+  template: src=roles/common/templates/consul_post.j2
+    dest=/etc/systemd/system/consul.service
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Unconditionally reboot the machine with all defaults
+  command: reboot
+
+

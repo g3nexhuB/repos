@@ -1,0 +1,30 @@
+cat > getcronoms.yml  << EOF
+---
+- name: getcron output
+  hosts: all
+  remote_user: ansible_sre
+  become: yes
+  gather_facts: no
+  tasks:
+    - shell: sx /usr/bin/su - root -c "crontab -l > /tmp/output.txt && chown -R ansible_sre /tmp/output.txt"
+
+- name: Verify output
+  hosts: all
+  remote_user: ansible_sre
+  gather_facts: no
+  tasks:
+    - shell: cat /tmp/output.txt
+      register: cat_content_file
+    - debug:
+        msg: "{{ cat_content_file.stdout }}"
+EOF
+
+
+cat > /etc/ansible/hosts <<EOF
+alae089.ic.ing.net
+alde063.ic.ing.net
+alat092.ic.ing.net
+alae097.ic.ing.net
+EOF
+
+ansible-playbook getcronoms.yml -i 'alae089.ic.ing.net'

@@ -1,0 +1,8 @@
+---
+- name: Vault Server Unseal  Deployment
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+  roles:
+    - vault-unseal 

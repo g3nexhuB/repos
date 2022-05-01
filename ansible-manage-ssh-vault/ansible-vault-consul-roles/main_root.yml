@@ -1,0 +1,8 @@
+---
+- name: Pre Deployment setup
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+  roles:
+    - common-root

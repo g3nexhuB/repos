@@ -1,0 +1,17 @@
+cd /home/azureuser
+curl -X PUT --data-binary @pull.rego localhost:8181/v1/policies/pull
+curl -X PUT --data-binary @sshd_authz.rego localhost:8181/v1/policies/sshd/authz
+curl -X PUT --data-binary @sudo_authz.rego localhost:8181/v1/policies/sudo/authz
+curl -X PUT localhost:8181/v1/data/roles/admin -d '["ops"]'
+curl -X PUT localhost:8181/v1/data/roles/sre -d '["ops","genesis"]'
+curl -X PUT localhost:8181/v1/data/roles/devops -d '["ops","genesis"]'
+curl -X PUT localhost:8181/v1/data/roles/rhel -d '["ops","genesis"]'
+
+curl -X PUT localhost:8181/v1/data/hosts -d \ '{
+    "boks-cyberark-vm-0":{
+        "bokscyberarkuseronly":[
+           "ops",
+           "genesis"
+             ]
+        }
+}'

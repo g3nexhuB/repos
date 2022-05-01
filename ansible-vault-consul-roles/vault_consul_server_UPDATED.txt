@@ -1,0 +1,152 @@
+
+
+
+#setting up vault server
+yum update -y && yum install -y wget unzip
+##install first vault and consul
+
+wget https://releases.hashicorp.com/vault/1.2.2/vault_1.2.2_linux_amd64.zip && wget https://releases.hashicorp.com/consul/1.8.0/consul_1.8.0_linux_amd64.zip
+
+
+then mv the binaries to /usr/bin
+
+unzip vault_1.2.2_linux_amd64.zip -d  /usr/bin && unzip consul_1.8.0_linux_amd64.zip -d /usr/bin
+
+##next configure consul
+vi /etc/systemd/system/consul.service
+
+##add this configurations
+[Unit]
+Description=Consul
+Documentation=https://www.consul.io/
+
+[Service]
+ExecStart=/usr/bin/consul agent -server -ui -data-dir=/tmp/consul -bootstrap-expect=1 -node=vault -bind=0.0.0.0 -config-dir=/etc/consul.d/
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+mkdir /etc/consul.d
+vi /etc/consul.d/ui.json
+{
+"bind_addr": "192.168.56.147",
+"advertise_addr":"192.168.56.147"
+}
+
+systemctl daemon-reload
+systemctl start consul && systemctl enable consul
+journalctl -f -u consul
+
+
+
+
+##install vault
+mv the binaries /usr/bin
+##create configuration directory
+mkdir /etc/vault
+vi /etc/vault/config.hcl
+##add the value
+
+
+
+storage "consul" {
+  address = "127.0.0.1:8500"
+  path    = "vault/"
+}
+
+listener "tcp" {
+  address  = "192.168.56.147:8200"
+  tls_disable = 1
+}
+
+plugin_directory = "/etc/vault/plugins"
+
+ui = true
+
+
+vi /etc/systemd/system/vault.service
+
+
+[Unit]
+Description=Vault
+Documentation=https://www.vault.io/
+
+[Service]
+ExecStart=/usr/bin/vault server -config=/etc/vault/config.hcl
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+systemctl start vault && systemctl enable vault
+
+systemctl stop firewalld && systemctl disable firewalld
+reboot
+
+export VAULT_ADDR=http://192.168.56.147:8200
+
+
+vault status
+vault operator init
+
+Unseal Key 1: i2ogpOR0l/UMUGixHxYf9ajSE6rE6wvET7jrdCYl/k0K
+Unseal Key 2: xUyjX2lmv5mm8LYDzTFy8Ag7P0zp1+pnU8tA0wF3Bpe9
+Unseal Key 3: 8xkfJFFhAiY2X51Obww49IvSk8odoRxanEnrFFwmZ3h9
+Unseal Key 4: 9Z8jNP9kaNxk6ONMQNFFpOvmF/D64qPQrM4kOvF9/mDh
+Unseal Key 5: P0lmo+1KfGaBJzsVb9OOWgeqFlbUDExnG1YdTB58Nu5r
+
+Initial Root Token: s.kdnYjbQgXWoiR7cmdmBU1VnE
+
+
+
+vi /opt/unseal
+export VAULT_ADDR=http://192.168.56.147:8200
+export VAULT_TOKEN=s.kdnYjbQgXWoiR7cmdmBU1VnE
+
+vault operator unseal -address=${VAULT_ADDR} i2ogpOR0l/UMUGixHxYf9ajSE6rE6wvET7jrdCYl/k0K
+vault operator unseal -address=${VAULT_ADDR} xUyjX2lmv5mm8LYDzTFy8Ag7P0zp1+pnU8tA0wF3Bpe9
+vault operator unseal -address=${VAULT_ADDR} 8xkfJFFhAiY2X51Obww49IvSk8odoRxanEnrFFwmZ3h9
+
+
+
+chmod 755 /opt/unseal
+
+vi /etc/systemd/system/vault_unseal.service
+
+[Unit]
+Description=Vault Unseal
+Documentation=https://www.vault.io/
+
+[Service]
+ExecStartPre=/bin/sleep 30
+ExecStart=/bin/sh -c "/opt/unseal"
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+
+systemctl daemon-reload
+systemctl start vault_unseal
+systemctl enable vault_unseal
+
+#scale to 3 boot
+[Unit]
+Description=Consul
+Documentation=https://www.consul.io/
+
+[Service]
+ExecStart=/usr/bin/consul agent -server -ui -data-dir=/tmp/consul -bootstrap-expect=3 -node=vault -bind=0.0.0.0 -config-dir=/etc/consul.d/
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+#reboot hosts
+reboot

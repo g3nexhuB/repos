@@ -1,0 +1,11 @@
+[Unit]
+Description=Boundary Server
+Documentation=https://www.boundaryproject.io/
+
+[Service]
+ExecStart=/usr/bin/boundary dev -api-listen-address=0.0.0.0 -cluster-listen-address=0.0.0.0 -proxy-listen-address=0.0.0.0 -worker-public-address={{ ip_addr }}
+ExecReload=/bin/kill -HUP $MAINPID
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

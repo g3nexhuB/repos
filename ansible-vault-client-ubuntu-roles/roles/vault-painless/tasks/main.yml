@@ -1,0 +1,62 @@
+# wget secret generator
+
+- name: Download vault secret generator Binary
+  get_url:
+    url: https://github.com/sethvargo/vault-secrets-gen/releases/download/v0.0.4/vault-secrets-gen__linux_amd64.zip
+    dest: /tmp/vault-secrets-gen__linux_amd64.zip
+    mode: '0755'
+    checksum: md5:0f8ef8fe53540624b66cc1402c9cae98
+
+- name: Create a vault plugins directory
+  ansible.builtin.file:
+    path: /etc/vault/plugins
+    state: directory
+    mode: '0755'
+
+- name: Extract vault to tmp
+  ansible.builtin.unarchive:
+    src: /tmp/vault-secrets-gen__linux_amd64.zip
+    dest: /etc/vault/plugins/
+    remote_src: yes
+
+
+- name: Set cap_ipc_lock=+ep on /etc/vault/plugins/vault-secrets-gen
+  community.general.capabilities:
+    path: /etc/vault/plugins/vault-secrets-gen
+    capability: cap_ipc_lock=+ep
+    state: present
+
+
+- name: set vault generator
+  shell: export VAULT_TOKEN=$(cat /etc/vault/root/rootkey) && sh /tmp/vault-secret-gen.sh
+
+
+- name: Create a directory
+  file:
+    path: /home/genex/painless-password-rotation
+    state: directory
+    mode: '0755'
+
+- name: Clone painless password rotation repo
+  ansible.builtin.git:
+    repo: https://github.com/scarolan/painless-password-rotation.git
+    dest: /home/genex/painless-password-rotation
+
+#mount secrets
+- name: mount secrets
+  shell: export VAULT_TOKEN=$(cat /etc/vault/root/rootkey) &&  vault secrets enable -path=systemcreds -version=2 kv
+
+#add policy rotate-password-linux
+- name: add policy
+  shell: export VAULT_TOKEN=$(cat /etc/vault/root/rootkey) && vault policy write rotate-linux /home/genex/painless-password-rotation/policies/rotate-linux.hcl
+
+#test rotate password
+- name: test rotate password
+  shell: export VAULT_TOKEN=$(cat /etc/vault/root/rootkey) && vault write gen/password length=36 symbols=0
+  register: password
+- debug: var=password.stdout_lines
+#test rotate passphrase
+- name: test rotate passphrase
+  shell: export VAULT_TOKEN=$(cat /etc/vault/root/rootkey) && vault write gen/passphrase words=5
+  register: passphrase
+- debug: var=passphrase.stdout_lines

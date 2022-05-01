@@ -1,0 +1,8 @@
+---
+- name: Deploy
+  hosts: "{{ hostname }}"
+  remote_user: ansible_sre
+  become: true
+  tasks:
+  roles:
+    - common

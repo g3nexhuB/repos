@@ -1,0 +1,17 @@
+---
+- name: build  environment
+  hosts: localhost
+  tasks:
+    - name: build environment
+      command: chmod 755 /Users/genesisancheta/repo/ansible-vault-client-roles/scripts/generate_env.sh
+    - name: generate environment j2
+      shell: sh /Users/genesisancheta/repo/ansible-vault-client-roles/scripts/generate_env.sh
+
+
+- name: Vault Client Deployment
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+  roles:
+    - common

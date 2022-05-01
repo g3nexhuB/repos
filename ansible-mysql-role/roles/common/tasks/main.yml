@@ -1,0 +1,49 @@
+
+- name: install dependencies on RHEL based distros
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - MySQL-python
+    - wget
+  when: ansible_os_family == 'RedHat'
+
+- name: Download mysql repository
+  get_url:
+    url: https://repo.mysql.com/mysql-community-release-el7-7.noarch.rpm
+    dest: /opt/mysql-community-release-el7-7.noarch.rpm
+    mode: '0644'
+
+- name: Install mysql server repo
+  command: yum install /opt/mysql-community-release-el7-7.noarch.rpm -y
+
+- name: Install mysql server repo
+  command: yum install mysql-server -y
+
+- name: Start and enable mysql services
+  service: "name={{ item }} state=started enabled=yes"
+  with_items:
+    - mysqld
+
+- name: Change root user password on first run
+  mysql_user: login_user=root
+              login_password=''
+              name=root
+              password={{ mysql_root_password }}
+              priv=*.*:ALL,GRANT
+
+- name: Set ~/.my.cnf file
+  template: src=my.cnf.j2 dest=/root/.my.cnf mode=0600
+
+- name: Create a new database with name
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+
+- name: Create database user with name and password  with all database privileges
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: '*.*:ALL'
+    state: present

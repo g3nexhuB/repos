@@ -1,0 +1,40 @@
+#consul
+---
+- name: Creating an empty service file
+  file:
+    path: "/etc/systemd/system/consul.service"
+    state: touch
+
+- name: Consul systemd configuration
+  template: src=roles/common/templates/consul.j2
+    dest=/etc/systemd/system/consul.service
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Create a consul directory
+  ansible.builtin.file:
+    path: /etc/consul.d
+    state: directory
+    mode: '0755'
+
+- name: Creating an empty ui json file
+  file:
+    path: "/etc/consul.d/ui.json"
+    state: touch
+
+- name: Consul ui configuration
+  template: src=roles/common/templates/ui.json.j2
+    dest=/etc/consul.d/ui.json
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Start consul server
+  ansible.builtin.service:
+    name: consul
+    state: started
+
+- name: Enable consul service
+  command: systemctl enable consul.service

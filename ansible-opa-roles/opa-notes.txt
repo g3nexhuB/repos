@@ -1,0 +1,55 @@
+#########
+how to build opa_pam module and setup to client
+#########
+
+############ on client hosts
+yum install git -y
+git clone https://github.com/open-policy-agent/contrib
+
+yum install jansson-devel -y && yum install pam-devel -y && yum install curl-devel -y && yum install gcc -y
+
+
+#build opa-pam module
+cd contrib/pam_opa/pam/ && make
+
+#copy to /lib64/security 
+cp pam_opa.so /lib64/security
+#set SELINUX=disabled
+vi /etc/selinux/config
+
+#configure pam.d/sshd and pam.d/sudo
+vi /etc/pam.d/sshd
+
+
+
+# add change the ip of your opa server
+auth required /lib64/security/pam_opa.so url=http://192.168.56.101:8181 authz_endpoint=/v1/data/sshd/authz display_endpoint=/v1/data/display pull_endpoint=/v1/data/pull log_level=debug
+#restart sshd
+systemctl restart sshd
+#restart host/s
+
+
+cat /etc/ssh/sshd_config
+UsePAM yes
+PasswordAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods keyboard-interactive
+ChallengeResponseAuthentication yes
+
+####### on opa server
+
+##add the vm ip to /etc/hosts
+vi /etc/hosts
+
+192.168.56.101   opaserver
+192.168.56.128   bastion-centos
+
+# add the host to /etc/host_identity.json
+
+
+#update opaserver
+
+
+#reboot
+#####DONE COMPLETED Setup
+

@@ -1,0 +1,46 @@
+#vault
+---
+- name: Create a vault config directory
+  ansible.builtin.file:
+    path: /etc/vault
+    state: directory
+    mode: '0755'
+
+- name: Creating an empty config hcl file
+  file:
+    path: "/etc/vault/config.hcl"
+    state: touch
+
+- name: Vault hcl configuration
+  template: src=roles/common/templates/config.hcl.j2
+    dest=/etc/vault/config.hcl
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Creating an empty service file
+  file:
+    path: "/etc/systemd/system/vault.service"
+    state: touch
+
+- name: Vault systemd configuration
+  template: src=roles/common/templates/vault.j2
+    dest=/etc/systemd/system/vault.service
+    backup=yes
+    owner=0 group=0 mode=0644
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Start vault server
+  ansible.builtin.service:
+    name: vault
+    state: started
+
+- name: Enable vault service
+  command: systemctl enable vault.service
+
+- name: Vault environment configuration
+  template: src=roles/common/templates/environment.j2
+    dest=/etc/environment
+    backup=yes
+    owner=0 group=0 mode=0644

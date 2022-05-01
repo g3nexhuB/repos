@@ -1,0 +1,42 @@
+[root@VAULT-OTP-CA genex]# vault operator init
+Unseal Key 1: /bmsksYMTVdn83BxmsQ/5efYyNfew5xEn/BHXhs8OilM
+Unseal Key 2: zHkJBgX7ahI8VPJkg+8wF2a2nqMSzwyv5RXxauRqeYm7
+Unseal Key 3: MqSX2CKgXJ5gOloDRXAZWM0NjUKomih0xVFe/VOXNf4T
+Unseal Key 4: fgxlNSnevKdRtEj0tC9dJ1tlvCHoLMLJ0MGeIzkj8fsW
+Unseal Key 5: fywz1i+ojFuyqy5LPkyIcV8lkvR9QvlQj8JiTzpoSfrW
+
+Initial Root Token: s.9GgkXFTLkLcd1r91jpFDL4RC
+
+Vault initialized with 5 key shares and a key threshold of 3. Please securely
+distribute the key shares printed above. When the Vault is re-sealed,
+restarted, or stopped, you must supply at least 3 of these keys to unseal it
+before it can start servicing requests.
+
+Vault does not store the generated master key. Without at least 3 key to
+reconstruct the master key, Vault will remain permanently sealed!
+
+It is possible to generate new unseal keys, provided you have a quorum of
+existing unseal keys shares. See "vault operator rekey" for more information.
+[root@VAULT-OTP-CA genex]#
+
+export VAULT_ADDR=http://192.168.57.13:8200
+export VAULT_TOKEN=s.9GgkXFTLkLcd1r91jpFDL4RC
+
+
+vault operator unseal -address=${VAULT_ADDR} /bmsksYMTVdn83BxmsQ/5efYyNfew5xEn/BHXhs8OilM
+vault operator unseal -address=${VAULT_ADDR} zHkJBgX7ahI8VPJkg+8wF2a2nqMSzwyv5RXxauRqeYm7
+vault operator unseal -address=${VAULT_ADDR} MqSX2CKgXJ5gOloDRXAZWM0NjUKomih0xVFe/VOXNf4T
+
+
+
+vault_addr = "http://192.168.57.13:8200"
+ssh_mount_point = "ssh"
+ca_cert = "-dev"
+tls_skip_verify = false
+allowed_roles = "*"
+
+
+
+vault write ssh/roles/otp_key_role key_type=otp \
+        default_user=genex \
+        cidr_list=0.0.0.0/0

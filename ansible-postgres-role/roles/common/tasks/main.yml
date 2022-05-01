@@ -1,0 +1,78 @@
+
+- name: install postgres on RHEL based distros
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - postgresql
+    - postgresql-server
+    - python3
+    - python3-pip
+    - wget
+    - unzip
+    - zip
+    - git
+  when: ansible_os_family == 'RedHat'
+
+- name: setup python
+  shell: alias python="python3" >> /home/genex/.bash_profile
+  become_user: genex
+
+- name: Download pip installer
+  shell: cd /tmp && wget https://bootstrap.pypa.io/pip/3.6/get-pip.py
+
+- name: Download pip installer
+  command: /usr/bin/python3 /tmp/get-pip.py
+
+- name: Upgrade pip installer
+  command: /usr/bin/python3 -m pip install --upgrade pip
+
+- name: Install psycopg2 binary python package
+  command: /usr/bin/python3 -m pip install psycopg2-binary
+
+
+- name: "Find out if PostgreSQL is initialized"
+  stat:
+    path: "/var/lib/pgsql/data/pg_hba.conf"
+  register: postgres_data
+  become: true
+
+
+- name: "Initialize PostgreSQL"
+  shell: postgresql-setup initdb
+
+
+- name: Start and enable postgres services
+  service: "name={{ item }} state=started enabled=yes"
+  with_items:
+    - postgresql
+
+- name: Create first database
+  postgresql_db:
+     state: present
+     name: "{{ db_name }}"
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: Create db user
+  postgresql_user:
+    state: present
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+
+- name: "Grant db user access to app db"
+  postgresql_privs:
+    type: database
+    database: "{{ db_name }}"
+    roles: "{{ db_user }}"
+    grant_option: no
+    privs: all
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3

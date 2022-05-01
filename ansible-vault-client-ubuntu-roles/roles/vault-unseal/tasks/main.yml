@@ -1,0 +1,6 @@
+- name: Unseal vault
+  command: "vault operator unseal {{ item }}"
+  loop:
+    - "2b817c5aa6a75f194c769a297dd5bc77722d8998eca5b8835ae9ef7822ec51bdd3"
+    - "7651c5eecf122468840a9b118f178a56b389f8cd36dd0ac9ba4e50482cefbdaea3"
+    - "b0cbf2c2675602874c1fe9e549c29ae43306d34f75b88ecfeb184af06e5a095e3d"

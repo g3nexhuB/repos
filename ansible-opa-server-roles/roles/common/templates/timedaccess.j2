@@ -1,0 +1,64 @@
+cd /home/genex
+curl -X PUT --data-binary @pull.rego localhost:8181/v1/policies/pull
+curl -X PUT --data-binary @sshd_authz.rego localhost:8181/v1/policies/sshd/authz
+curl -X PUT --data-binary @sudo_authz.rego localhost:8181/v1/policies/sudo/authz
+curl -X PUT localhost:8181/v1/data/roles/admin -d '["ops"]'
+curl -X PUT localhost:8181/v1/data/roles/sre -d '["genex","angel"]'
+curl -X PUT localhost:8181/v1/data/roles/devops -d '["xander","andrea","aeson"]'
+curl -X PUT localhost:8181/v1/data/roles/ -d '["genex","angel","andrea","xander","aeson"]'
+curl -X PUT localhost:8181/v1/data/roles/ -d '["genex","angel","andrea","xander","aeson"]'
+
+curl -X PUT localhost:8181/v1/data/hosts -d \ '{
+    "bastion-centos":{
+        "bastioncentosonly":[
+           "ops",
+           "genex"
+             ]
+        },
+    "CEN-PROD-1":{
+        "centosprod1useronly":[
+            "ops",
+            "genex"
+            ]
+        },
+     "CEN-PROD-2":{
+       "centosprod2useronly":[
+           "ops",
+           "genex",
+           "angel",
+           "andrea",
+           "xander",
+           "aeson"
+            ]
+        },
+    "centos-temp":{
+        "centostempuseronly":[
+            "ops",
+            "genex"
+            ]
+        },
+    "jenkins-centos":{
+        "jenkinscentosuseronly":[
+            "ops",
+            "genex"
+            ]
+        },
+    "worker-2":{
+        "worker2useronly":[
+            "ops",
+            "genex"
+            ]
+        },
+    "worker-1":{
+        "worker1useronly":[
+            "ops",
+            "genex"
+            ]
+        },
+    "master":{
+        "masteruseronly":[
+            "ops",
+            "genex"
+            ]
+        }           
+}'

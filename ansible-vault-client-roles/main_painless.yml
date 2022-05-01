@@ -1,0 +1,16 @@
+---
+- name: Vault Server Painless Password Deployment
+  hosts: localhost
+  tasks:
+    - name: permission script
+      shell: chmod 755 scripts/vault-secret-gen.sh
+    - name: copy script
+      shell: scp scripts/vault-secret-gen.sh "{{ remote_user }}@{{ vault_addr }}:/tmp/"
+
+- name: Vault Server Painless Password Deployment
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+  roles:
+    - vault-painless

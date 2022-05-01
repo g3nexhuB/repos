@@ -1,0 +1,1 @@
+vault write ssh/roles/otp_key_role key_type=otp default_user=jumpuser cidr_list=0.0.0.0/0

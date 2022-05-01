@@ -1,0 +1,11 @@
+---
+- name: Send zip file to VM2 Vault
+  hosts: vault
+  remote_user: genesisancheta
+  gather_facts: no
+  tasks:
+    - copy:
+        src: /tmp/csvcompilation.zip 
+        dest: /home/genesisancheta/csvcompilation.zip 
+        owner: genesisancheta
+        mode: 0644

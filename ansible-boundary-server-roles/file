@@ -1,0 +1,41 @@
+boundary authenticate password -auth-method-id=ampw_1234567890 -login-name=admin -password=password > boundary_token
+
+export BOUNDARY_TOKEN=$(cat boundary_token)
+boundary scopes create -name=retailshelf -description="For Retailshelf "
+export ORG_ID="o_fveEO5jvCW"
+
+
+boundary scopes create -scope-id=o_6kVHKKH1aQ -name=rs_hosts     -description="Manage rs machines"
+
+boundary host-catalogs create static -scope-id=p_fpHwgIFvu4 -name=ITOPS -description="For ITOPS usage"
+
+
+boundary hosts create static -name=CEN-PROD-1 -description="CENTOS PROD 1" -address="192.168.56.135" -host-catalog-id=hcst_k8BphPmztd
+
+hcst_k8BphPmztd
+
+
+boundary host-sets create static -name="centos" -description="centos machines" -host-catalog-id=hcst_k8BphPmztd
+
+boundary host-sets add-hosts -id=hsst_586BZ0Ooga -host=hst_AVtXYn1b3P
+
+
+boundary targets create tcp -name="target-centos" -description="target centos" -default-port=22 -scope-id=p_htrbggQunc -session-connection-limit="-1"
+
+boundary targets add-host-sets -id=ttcp_9w3P8aFdot -host-set=hsst_586BZ0Ooga
+
+
+boundary auth-methods create password -scope-id=o_fveEO5jvCW -name="org_auth_method" -description="Org auth method"
+
+
+boundary accounts create password -auth-method-id=ampw_mME3js4J0p -login-name="genex" -password="password" -name=genex -description="genex password account"
+
+
+boundary users create -name="genex" -description="A test user" -scope-id=o_fveEO5jvCW
+
+
+boundary users set-accounts -id=u_LfCCOTJhTQ -account=<account_id>
+
+
+
+boundary authenticate password -login-name="genex" -password="password" -auth-method-id=ampw_mME3js4J0p

@@ -1,0 +1,28 @@
+---
+- name: copy rootkey
+  hosts: localhost
+  tasks:
+    - name: scp token
+      command: scp /Users/genesisancheta/repo/ansible-vault-client-roles/roles/vault-unseal/root_token/rootkey "{{ remote_user }}@{{ ip_addr }}:/home/genex"
+
+- name: Vault client Deployment
+  hosts: "{{ hostname }}"
+  remote_user: genex
+  become: true
+  tasks:
+    - name: create token
+      shell: export VAULT_ADDR="http://{{ vault_addr }}:8200" && export VAULT_TOKEN=$(cat /home/genex/rootkey) && vault token create -period 24h -policy rotate-linux
+    - name: change permission of script
+      command: chmod +x /home/genex/painless-password-rotation/files/rotate_linux_password.sh
+    
+    - name: Deploy every minute change password"
+      ansible.builtin.cron:
+        name: "deploy password rotate"
+        minute: "*"
+        hour: "*"
+        job: "/bin/sh /home/genex/painless-password-rotation/files/rotate_linux_password.sh {{ remote_user }}"
+
+
+#systemcreds/linux/boks-cyberark-vm-0/te34uk_creds
+
+#vault kv get systemcreds/linux/boks-cyberark-vm-0/te34uk_creds
